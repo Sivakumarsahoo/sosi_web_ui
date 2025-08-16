@@ -1,5 +1,5 @@
 import { Box, Grid, Paper, TextField, Typography } from "@mui/material";
-import React, { HTMLAttributes, useState } from "react";
+import React, { HTMLAttributes, useEffect, useState } from "react";
 import cancelIcon from "../../assets/cancelIcon.svg";
 import deleteIcon from "../../assets/deleteIcon.svg";
 import editIcon from "../../assets/editIcon.svg";
@@ -9,27 +9,41 @@ const TodoCard: React.FC<Props> = ({
   content,
   saveTask,
   deleteTask,
+  todos,
 }) => {
   const [data, setData] = useState<String>("");
+  const [inputValue, setInputValue] = useState<string>("");
   const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const handleEdit = () => {
     setIsEdit(true);
   };
   const handleSave = () => {
-    saveTask(data, index);
+    saveTask(data, index, content);
     setIsEdit(false);
   };
   const handleCancel = () => {
     setIsEdit(false);
-    setData("");
+    setInputValue(content);
   };
   const handleChange = (event) => {
-    setData(event.target.value);
+    console.log(event.target.value);
+    setInputValue(event.target.value);
   };
+  useEffect(() => {
+    setInputValue(content);
+  }, [todos]);
+  console.log("TodoCard rendered with content:", content, data);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setData(inputValue);
+      console.log("Data updated after 3 seconds:", inputValue);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
   return (
-    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+    <Grid size={{ xs: 12, sm: 6, md: 4 }} sx={{ height: "min-content" }}>
       <Paper
         elevation={2}
         sx={{
@@ -114,7 +128,7 @@ const TodoCard: React.FC<Props> = ({
             {content}
           </Typography>
         ) : (
-          <TextField value={data} onChange={handleChange} />
+          <TextField value={inputValue} onChange={handleChange} />
         )}
       </Paper>
     </Grid>
@@ -126,6 +140,7 @@ interface Props extends HTMLAttributes<any> {
   content: string;
   saveTask: any;
   deleteTask: any;
+  todos: string[];
 }
 
 export default TodoCard;

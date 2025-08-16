@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import TodoCard from "../../component/TodoCard/index.tsx";
 
 const CounterPage: React.FC = () => {
-  const storedTodos = window.localStorage.getItem("todos");
+  // In this section I'm mostly focused on local storage, basic proxy reflect and debouncing functionality.
   const [todos, setTodos] = useState<string[]>([]);
   const [isInitial, setIsInitial] = useState<boolean>(false);
 
@@ -11,7 +11,7 @@ const CounterPage: React.FC = () => {
     setTodos([]);
   };
 
-  const handleSave = (message, index) => {
+  const handleSave = (message, index, oldMessage) => {
     setTodos((prevTodos) => {
       const updatedTodos = [...prevTodos];
       updatedTodos[index] = message;
@@ -33,7 +33,10 @@ const CounterPage: React.FC = () => {
         console.warn(
           "Illegal argument provided to the function, please try again."
         );
-        return;
+        console.warn("Arguments received:", arg);
+        const args = [arg[2], arg[1], arg[0]];
+        console.warn("Arguments reordered to:", args);
+        return Reflect.apply(target, thisArg, args);
       }
       return Reflect.apply(target, thisArg, arg);
     },
@@ -42,14 +45,24 @@ const CounterPage: React.FC = () => {
 
   useEffect(() => {
     if (isInitial) {
-      window.localStorage.setItem("todos", JSON.stringify(todos));
+      try {
+        window.localStorage.setItem("todos", JSON.stringify(todos));
+        console.log("Done");
+      } catch (error) {
+        console.error("Error saving todos to localStorage:", error);
+        console.error("Please check your browser settings or try again later.");
+      }
     }
   }, [todos, isInitial]);
 
   useEffect(() => {
-    if (storedTodos) {
+    try {
+      const storedTodos = window.localStorage.getItem("todos") || "[]";
       setTodos(JSON.parse(storedTodos));
       setIsInitial(true);
+    } catch (error) {
+      console.error("Error loading todos from localStorage:", error);
+      console.error("Please check your browser settings or try again later.");
     }
   }, []);
 
@@ -122,6 +135,7 @@ const CounterPage: React.FC = () => {
                   content={todo}
                   saveTask={proxyCheck}
                   deleteTask={handleDelete}
+                  todos={todos}
                 />
               ))}
             </Grid>
